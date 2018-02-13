@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<head>
+	<title>Hello</title>
+	<style type="text/css">
+		body {
+			margin: 33px;
+			font-family: "Lucida Sans Typewriter", "Courier New", monospace;
+			color: #333;
+		}
+	</style>
+</head>
+
+<h1>…</h1>
+Hello from an express app<br />
+You can test the <a>/hello</a> and <a>/foo</a> route
+
+<script>
+	document.querySelector('h1').textContent = document.title;
+	Array.prototype.forEach.call(document.querySelectorAll('a'), function(el) {
+		el.href || (el.href = el.text);
+	});
+</script>
