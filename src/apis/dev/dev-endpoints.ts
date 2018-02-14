@@ -1,26 +1,23 @@
 import express = require('express')
 import { serve_micro_page } from '../../services/micro-page'
+import { ExtendedError } from '../../types'
 
 function create() {
 	const router = express.Router()
 
 	router.get('/', serve_micro_page('Dev routes', `
 <li><a>/ping</a>
-<li><a>/echo</a>
-<li><a>/mock-status/210</a> (HTTP status code)
-<li><a>/runtime-error-direct</a>
+<li><a>/mock-status</a> (HTTP status code)
 <li><a>/sync-error</a>
+<li><a>/client-error-next</a>
 <li><a>/runtime-error-next</a>
 <li><a>/async-error</a>
 <li><a>/timeout</a>
 <li><a>/timeout/3</a> (duration in s)
+<li><a>/anything_not_handled_will_just_echo</a>
 	`))
 
 	router.get('/ping', function(req, res) {
-		res.send('pong')
-	})
-
-	router.get('/echo', function(req, res) {
 		res.send('pong')
 	})
 
@@ -31,14 +28,15 @@ function create() {
 		res.status(status).send(`Mocked ${status} at ${new Date().toISOString()}.`)
 	})
 
-	router.get('/runtime-error-direct', function(req, res) {
-		// bad
-		res.status(500).send('something blew up ! (sent directly, error middlewares not used)')
+	router.get('/client-error-next', function(req, res, next) {
+		res
+			.status(418)
+			.send("I'm a teapot! (sent directly, error middlewares not used)")
 	})
 
 	router.get('/runtime-error-next', function(req, res, next) {
 		const err = new Error('A test exception passed to next()  !');
-		(err as any).httpStatusHint = 567
+		(err as ExtendedError).httpStatusHint = 567
 		next(err)
 	})
 
@@ -46,6 +44,8 @@ function create() {
 		throw new Error('A test exception thrown synchronously !')
 	})
 
+	// Should not happen but can (bug)
+	// depending on your setup, it may crash the app
 	router.get('/async-error', function() {
 		setTimeout(function() {
 			throw new Error('A test exception thrown asynchronously !')
@@ -60,13 +60,17 @@ function create() {
 		const timeout = Number(req.params.durationInSec)
 		if (Number.isNaN(timeout)) {
 			const err = new Error('You must provide a number in second !');
-			(err as any).httpStatusHint = 400
+			(err as ExtendedError).httpStatusHint = 400
 			throw err
 		} else {
 			setTimeout(function() {
 				res.send('I waited ' + req.params.durationInSec + ' second(s).')
 			}, timeout * 1000)
 		}
+	})
+
+	router.get('*', function(req, res) {
+		res.send('TODO echo')
 	})
 
 	return router

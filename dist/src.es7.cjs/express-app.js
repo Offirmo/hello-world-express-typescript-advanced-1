@@ -28,7 +28,14 @@ function create(dependencies = {}) {
             uuid: req.uuid,
             method: morgan.method(req),
             url: morgan.url(req),
-        });
+        }, 'request received');
+        next();
+    });
+    // Deactivate integrated express caching (etag generation + 304).
+    // This is a REST API, we are not serving long-living resources
+    // TODO is that really needed?
+    app.use(function disable_cache(req, res, next) {
+        res.set('cache-control', 'public, max-age=0, no-cache');
         next();
     });
     // TODO activate CORS
@@ -60,7 +67,10 @@ function create(dependencies = {}) {
         if (!err) {
             err = new Error('unknown error');
         }
-        logger.error({ err }, 'app error handler: request failed!');
+        logger.error({
+            uuid: req.uuid,
+            err,
+        }, 'app error handler: request failed!');
         const status = err.httpStatusHint || 500;
         res
             .status(status)

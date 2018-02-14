@@ -39,7 +39,15 @@ function create(dependencies: Partial<InjectableDependencies> = {}): express.App
 			uuid: (req as RequestWithUUID).uuid,
 			method: (morgan as any).method(req),
 			url: (morgan as any).url(req),
-		})
+		}, 'request received')
+		next()
+	})
+
+	// Deactivate integrated express caching (etag generation + 304).
+	// This is a REST API, we are not serving long-living resources
+	// TODO is that really needed?
+	app.use(function disable_cache(req, res, next) {
+		res.set('cache-control', 'public, max-age=0, no-cache')
 		next()
 	})
 
@@ -75,7 +83,10 @@ function create(dependencies: Partial<InjectableDependencies> = {}): express.App
 	 */
 	app.use(function errorHandler(err: Error, req: express.Request, res: express.Response, next: express.NextFunction) {
 		if (!err) {err = new Error('unknown error')}
-		logger.error({err}, 'app error handler: request failed!')
+		logger.error({
+			uuid: (req as RequestWithUUID).uuid,
+			err,
+		}, 'app error handler: request failed!')
 		const status = (err as ExtendedError).httpStatusHint || 500
 		res
 			.status(status)
