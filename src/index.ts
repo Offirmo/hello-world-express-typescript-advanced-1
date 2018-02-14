@@ -2,11 +2,12 @@ import { createServer } from 'http'
 import * as bunyan from 'bunyan'
 import { ServerLogger } from '@offirmo/loggers-types-and-stubs'
 
+
 import { create as createExpressApp } from './express-app'
 
 
 async function create() {
-	console.log('Starting_')
+	console.log('Starting_') // tslint:disable-line
 
 	// TODO plug to a syslog
 	const logger: ServerLogger = bunyan.createLogger({
@@ -17,23 +18,20 @@ async function create() {
 	logger.info('Logger ready.')
 
 	process.on('uncaughtException', (err: Error) => {
-		console.error(`Uncaught exception!`, err)
 		setTimeout(() => process.exit(1), 250)
-		logger.fatal(err, `Uncaught exception!`)
+		logger.fatal(err, 'Uncaught exception!')
 		// TODO cleanup
 		// I've an experimental module for that…
 	})
 
 	process.on('unhandledRejection', (reason: any, p: Promise<any>): void => {
-		console.error('Unhandled Rejection at: Promise', p, 'reason:', reason);
 		setTimeout(() => process.exit(1), 250)
-		logger.fatal({ reason, p }, `Uncaught rejection!`)
+		logger.fatal({ reason, p }, 'Uncaught rejection!')
 		// TODO cleanup
 		// I've an experimental module for that…
 	})
 
 	process.on('warning', (warning: Error) => {
-		console.warn(warning)
 		logger.warn(warning)
 	})
 
@@ -52,8 +50,7 @@ async function create() {
 
 	server.listen(config.port, (err: Error) => {
 		if (err) {
-			console.error(`Server error!`, err)
-			logger.fatal(err, `Server error!`)
+			logger.fatal(err, 'Server error!')
 			return
 		}
 
@@ -64,5 +61,5 @@ async function create() {
 
 create()
 .catch(e => {
-	console.error('Server failed to launch:', e.message)
+	console.error('Server failed to launch:', e.message) // tslint:disable-line
 })

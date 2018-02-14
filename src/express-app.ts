@@ -46,13 +46,13 @@ async function create(dependencies: Partial<InjectableDependencies> = {}) {
 	})
 
 	// log the request as early as possible
-	app.use(function log(untyped_req, res, next) {
+	app.use(function log_requests(untyped_req, res, next) {
 		const req = untyped_req as RequestWithUUID
 
 		logger.info({
 			uuid: req.uuid,
-			method: (morgan as any)['method'](req),
-			url: (morgan as any)['url'](req),
+			method: (morgan as any).method(req),
+			url: (morgan as any).url(req),
 		})
 		next()
 	})
@@ -77,7 +77,7 @@ async function create(dependencies: Partial<InjectableDependencies> = {}) {
 
 	const errorHandler: express.ErrorRequestHandler = (err: ExtendedError, req, res, next) => {
 		logger.error(err)
-		res.status(err.httpStatusHint || 500).send(`Something broke! Our devs are already on it!`)
+		res.status(err.httpStatusHint || 500).send('Something broke! Our devs are already on it!')
 	}
 	app.use(errorHandler)
 

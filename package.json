@@ -17,6 +17,8 @@
     "build": "npm-run-all clean --parallel transpile copy-other-files",
     "start": "node dist/src.es7.cjs/index.js",
     "__dev": "~~~~~~ DEVELOPMENT ~~~~~~",
+    "lint": "tslint --config meta/tslint.json 'src/**/*.ts'",
+    "lint:fix": "tslint --fix --config meta/tslint.json 'src/**/*.ts'",
     "dev1": "tsc -p meta/dev --watch --pretty",
     "dev2": "npm run copy-other-files -- --watch --verbose",
     "dev": "npm-run-all clean --parallel dev1 dev2",
@@ -27,14 +29,10 @@
     "@offirmo/loggers-types-and-stubs": "^0.2.0",
     "body-parser": "^1.17.1",
     "bunyan": "^1.8.10",
-    "consolidate": "^0.15.0",
-    "dustjs-helpers": "^1.7.3",
-    "dustjs-linkedin": "^2.7.5",
     "express": "^4.15.2",
     "helmet": "^3.5.0",
     "lodash": "^4.17.4",
     "morgan": "^1.8.1",
-    "simplyconfig": "^0.4.0",
     "typescript-string-enums": "^0.3.2",
     "uuid": "^3.0.1"
   },
@@ -42,8 +40,6 @@
     "@offirmo/unit-test-toolbox": "^3.0.0",
     "@types/body-parser": "^1.16.3",
     "@types/bunyan": "^1.8.3",
-    "@types/consolidate": "^0.0.33",
-    "@types/dustjs-linkedin": "^1.2.30",
     "@types/express": "^4.0.35",
     "@types/helmet": "^0.0.37",
     "@types/lodash": "^4.14.63",
@@ -56,9 +52,13 @@
     "npm-run-all": "^4.0.2",
     "pre-commit": "^1.2.2",
     "supertest": "^3.0.0",
+    "tslint": "^5.9.1",
+    "tslint-consistent-codestyle": "^1.11.1",
+    "tslint-eslint-rules": "^4.1.1",
     "typescript": "^2.2.2"
   },
   "pre-commit": [
+    "lint",
     "build"
   ]
 }

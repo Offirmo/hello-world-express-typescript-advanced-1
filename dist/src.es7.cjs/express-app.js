@@ -31,12 +31,12 @@ async function create(dependencies = {}) {
         next();
     });
     // log the request as early as possible
-    app.use(function log(untyped_req, res, next) {
+    app.use(function log_requests(untyped_req, res, next) {
         const req = untyped_req;
         logger.info({
             uuid: req.uuid,
-            method: morgan['method'](req),
-            url: morgan['url'](req),
+            method: morgan.method(req),
+            url: morgan.url(req),
         });
         next();
     });
@@ -56,7 +56,7 @@ async function create(dependencies = {}) {
     });
     const errorHandler = (err, req, res, next) => {
         logger.error(err);
-        res.status(err.httpStatusHint || 500).send(`Something broke! Our devs are already on it!`);
+        res.status(err.httpStatusHint || 500).send('Something broke! Our devs are already on it!');
     };
     app.use(errorHandler);
     return app;
