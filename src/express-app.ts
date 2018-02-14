@@ -12,20 +12,15 @@ import { ExtendedError, RequestWithUUID } from './types'
 
 interface InjectableDependencies {
 	logger: ServerLogger
-	isHttps: boolean
 }
 
 const defaultDependencies: InjectableDependencies = {
 	logger: serverLoggerToConsole,
-	isHttps: false,
 }
 
-async function create(dependencies: Partial<InjectableDependencies> = {}) {
-	const { logger, isHttps } = Object.assign({}, defaultDependencies, dependencies)
-	logger.debug('Initializing the top express app…')
-
-	if (!isHttps)
-		logger.warn('XXX please activate HTTPS on this server !')
+function create(dependencies: Partial<InjectableDependencies> = {}): express.Application {
+	const { logger } = Object.assign({}, defaultDependencies, dependencies)
+	logger.debug('Starting up: Initializing the top express app…')
 
 	const app = express()
 
@@ -57,13 +52,19 @@ async function create(dependencies: Partial<InjectableDependencies> = {}) {
 		limit: '1Mb', // for profile image
 	}))
 
-	app.use(await createRoutes({
+	app.use(createRoutes({
 		logger,
 	}))
 
+	// XXX is this needed ?
 	app.use((req, res) => {
-		logger.error(`! 404 on "${req.path}" !"`)
-		res.status(404).end()
+		logger.warn(`404 on "${req.path}"!"`)
+
+		const status = 404
+		res
+			.status(status)
+			.type('txt')
+			.send(`${status}: ${http.STATUS_CODES[status]}`)
 	})
 
 	/**
@@ -76,7 +77,10 @@ async function create(dependencies: Partial<InjectableDependencies> = {}) {
 		if (!err) {err = new Error('unknown error')}
 		logger.error({err}, 'app error handler: request failed!')
 		const status = (err as ExtendedError).httpStatusHint || 500
-		res.status(status).send(`Something broke! Our devs are already on it! [${status}: ${http.STATUS_CODES[status]}]`)
+		res
+			.status(status)
+			.type('txt')
+			.send(`Something broke! Our devs are already on it! [${status}: ${http.STATUS_CODES[status]}]`)
 	})
 
 	return app

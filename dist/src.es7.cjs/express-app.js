@@ -10,13 +10,10 @@ const loggers_types_and_stubs_1 = require("@offirmo/loggers-types-and-stubs");
 const routes_1 = require("./routes");
 const defaultDependencies = {
     logger: loggers_types_and_stubs_1.serverLoggerToConsole,
-    isHttps: false,
 };
-async function create(dependencies = {}) {
-    const { logger, isHttps } = Object.assign({}, defaultDependencies, dependencies);
-    logger.debug('Initializing the top express app…');
-    if (!isHttps)
-        logger.warn('XXX please activate HTTPS on this server !');
+function create(dependencies = {}) {
+    const { logger } = Object.assign({}, defaultDependencies, dependencies);
+    logger.debug('Starting up: Initializing the top express app…');
     const app = express();
     // https://expressjs.com/en/4x/api.html#app.settings.table
     app.enable('trust proxy');
@@ -41,12 +38,17 @@ async function create(dependencies = {}) {
         parameterLimit: 100,
         limit: '1Mb',
     }));
-    app.use(await routes_1.create({
+    app.use(routes_1.create({
         logger,
     }));
+    // XXX is this needed ?
     app.use((req, res) => {
-        logger.error(`! 404 on "${req.path}" !"`);
-        res.status(404).end();
+        logger.warn(`404 on "${req.path}"!"`);
+        const status = 404;
+        res
+            .status(status)
+            .type('txt')
+            .send(`${status}: ${http.STATUS_CODES[status]}`);
     });
     /**
      *  Error-handling middleware always takes four arguments.
@@ -60,7 +62,10 @@ async function create(dependencies = {}) {
         }
         logger.error({ err }, 'app error handler: request failed!');
         const status = err.httpStatusHint || 500;
-        res.status(status).send(`Something broke! Our devs are already on it! [${status}: ${http.STATUS_CODES[status]}]`);
+        res
+            .status(status)
+            .type('txt')
+            .send(`Something broke! Our devs are already on it! [${status}: ${http.STATUS_CODES[status]}]`);
     });
     return app;
 }
