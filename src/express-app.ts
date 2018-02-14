@@ -1,8 +1,9 @@
-import * as express from 'express'
-import * as uuid from 'uuid'
+import http = require('http')
+import express = require('express')
+import uuid = require('uuid')
 import { urlencoded as bodyUrlencodedParser} from 'body-parser'
-import * as morgan from 'morgan'
-import * as helmet from 'helmet'
+import morgan = require('morgan')
+import helmet = require('helmet')
 import { ServerLogger, serverLoggerToConsole } from '@offirmo/loggers-types-and-stubs'
 
 import { create as createRoutes } from './routes'
@@ -11,27 +12,20 @@ import { ExtendedError, RequestWithUUID } from './types'
 
 interface InjectableDependencies {
 	logger: ServerLogger
-	sessionSecret: string
 	isHttps: boolean
 }
 
 const defaultDependencies: InjectableDependencies = {
 	logger: serverLoggerToConsole,
-	sessionSecret: 'keyboard cat',
 	isHttps: false,
 }
 
 async function create(dependencies: Partial<InjectableDependencies> = {}) {
 	const { logger, isHttps } = Object.assign({}, defaultDependencies, dependencies)
-	let { sessionSecret } = Object.assign({}, defaultDependencies, dependencies)
 	logger.debug('Initializing the top express app…')
 
 	if (!isHttps)
 		logger.warn('XXX please activate HTTPS on this server !')
-
-	sessionSecret = sessionSecret || defaultDependencies.sessionSecret
-	if (sessionSecret === defaultDependencies.sessionSecret)
-		logger.warn('XXX please set a secret for the session middleware !')
 
 	const app = express()
 
@@ -39,18 +33,15 @@ async function create(dependencies: Partial<InjectableDependencies> = {}) {
 	app.enable('trust proxy')
 	app.disable('x-powered-by')
 
-	app.use(function assignId(untyped_req, res, next) {
-		const req = untyped_req as RequestWithUUID
-		req.uuid = uuid.v4()
+	app.use(function assign_unique_request_id(req, res, next) {
+		(req as RequestWithUUID).uuid = uuid.v4()
 		next()
 	})
 
 	// log the request as early as possible
-	app.use(function log_requests(untyped_req, res, next) {
-		const req = untyped_req as RequestWithUUID
-
+	app.use(function log_request(req, res, next) {
 		logger.info({
-			uuid: req.uuid,
+			uuid: (req as RequestWithUUID).uuid,
 			method: (morgan as any).method(req),
 			url: (morgan as any).url(req),
 		})
@@ -75,11 +66,18 @@ async function create(dependencies: Partial<InjectableDependencies> = {}) {
 		res.status(404).end()
 	})
 
-	const errorHandler: express.ErrorRequestHandler = (err: ExtendedError, req, res, next) => {
-		logger.error(err)
-		res.status(err.httpStatusHint || 500).send('Something broke! Our devs are already on it!')
-	}
-	app.use(errorHandler)
+	/**
+	 *  Error-handling middleware always takes four arguments.
+	 *  You must provide four arguments to identify it as an error-handling middleware function.
+	 *  Even if you don’t need to use the next object, you must specify it to maintain the signature.
+	 *  Otherwise, the next object will be interpreted as regular middleware and will fail to handle errors.
+	 */
+	app.use(function errorHandler(err: Error, req: express.Request, res: express.Response, next: express.NextFunction) {
+		if (!err) {err = new Error('unknown error')}
+		logger.error({err}, 'app error handler: request failed!')
+		const status = (err as ExtendedError).httpStatusHint || 500
+		res.status(status).send(`Something broke! Our devs are already on it! [${status}: ${http.STATUS_CODES[status]}]`)
+	})
 
 	return app
 }

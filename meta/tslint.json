@@ -19,6 +19,7 @@
 			"severity": "warning"
 		},
 		"object-literal-sort-keys": false,
+		"only-arrow-functions": false,
 		"ordered-imports": false,
 		"quotemark": [true, "single", "avoid-escape", "avoid-template"],
 		"semicolon": [true, "never"],

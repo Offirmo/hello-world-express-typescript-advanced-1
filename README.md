@@ -14,9 +14,8 @@ See also those related/expanded Hello Worlds:
 
 
 References:
-* https://github.com/Offirmo-team/wiki/wiki/express.js
-* https://expressjs.com/en/4x/api.html
-* https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/express/express-tests.ts
+* Express https://expressjs.com/en/4x/api.html https://github.com/Offirmo-team/wiki/wiki/express.js
+* Express with TypeScript: https://github.com/DefinitelyTyped/DefinitelyTyped/blob/master/types/express/express-tests.ts
 
 
 
@@ -26,6 +25,8 @@ References:
 This app needs node >= 8
 
 ### Launch
+TODO review
+
 ```bash
 yarn --production
 yarn start

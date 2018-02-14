@@ -18,17 +18,13 @@ async function create() {
 	logger.info('Logger ready.')
 
 	process.on('uncaughtException', (err: Error) => {
-		setTimeout(() => process.exit(1), 250)
 		logger.fatal(err, 'Uncaught exception!')
-		// TODO cleanup
-		// I've an experimental module for that…
+		// no need to crash the app, our server is stateless
 	})
 
 	process.on('unhandledRejection', (reason: any, p: Promise<any>): void => {
-		setTimeout(() => process.exit(1), 250)
 		logger.fatal({ reason, p }, 'Uncaught rejection!')
-		// TODO cleanup
-		// I've an experimental module for that…
+		// no need to crash the app, our server is stateless
 	})
 
 	process.on('warning', (warning: Error) => {
